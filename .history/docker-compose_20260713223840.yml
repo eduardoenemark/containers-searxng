@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+  script:
+    # image: docker.io/alpine:3.23.5
+    image: docker.io/busybox:uclibc
+    container_name: script
+    volumes:
+      - ./:/host
+    command: |
+      /bin/sh -c "
+        mkdir -p /host/data/valkey /host/data/searxng &&
+        touch /host/data/valkey/.ready
+      "
+  valkey:
+    image: docker.io/valkey/valkey:9-alpine
+    container_name: valkey
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/valkey:/data
+    depends_on:
+      script:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD","valkey-cli -p 6379 ping"]
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 3s
+    networks:
+      - searxng-net
+  searxng:
+    image: docker.io/searxng/searxng:2026.7.3-747cec4c2
+    container_name: searxng
+    restart: always
+    ports:
+      - 8888:8080
+    environment:
+      - SEARXNG_PORT=8080
+      - SEARXNG_BIND=127.0.0.1
+      - SEARXNG_SECRET=
+      - SEARXNG_LANG=auto
+      - SEARXNG_AUTOCOMPLETE=google
+      - SEARXNG_METRICS=false
+      - SEARXNG_IMAGE_PROXY=false
+      - SEARXNG_METHOD=POST
+      - SEARXNG_SAFE_SEARCH=0
+      - SEARXNG_VALKEY_HOST=searxng-valkey
+    depends_on:
+      valkey:
+        condition: service_healthy
+    volumes:
+      - ./config/settings-full.yml:/etc/searxng/settings.yml:ro,Z
+      - ./config/limiter.toml:/etc/searxng/limiter.toml:ro,Z
+      - ./data/searxng:/var/lib/searxng
+    networks:
+      - searxng-net
+networks:
+  searxng-net:
+    driver: bridge

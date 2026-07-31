@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  script:
+    # image: docker.io/alpine:3.23.5
+    image: docker.io/busybox:uclibc
+    container_name: script
+    volumes:
+      - ./:/host
+    command: |
+      /bin/sh -c "mkdir -p /host/data/valkey /host/data/searxng"
+  valkey:
+    image: docker.io/valkey/valkey:9-alpine
+    container_name: searxng-valkey
+    depends_on:
+      - script
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - data/valkey:/data
+
+# services:
+#   valkey:
+#     image: docker.io/valkey/valkey:9-alpine
+#     container_name: searxng-valkey
+#     restart: always
+#     ports:
+#       - 6379:6379
+#     # command: mkdir -p $PWD/data/valkey
+#     volumes:
+#       - $PWD/data/valkey:/data
+    # healthcheck:
+    #   test: ["CMD", "valkey-cli", "ping"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 3
+    #   start_period: 10s
+    # networks:
+    #   - searxng-net
+  # searxng:
+  #   image: docker.io/searxng/searxng:2026.7.3-747cec4c2
+  #   container_name: searxng
+  #   restart: always
+  #   ports:
+  #     - 8888:8080
+  #   environment:
+  #     - SEARXNG_PORT=8080
+  #     - SEARXNG_BIND=127.0.0.1
+  #     - SEARXNG_SECRET="searxng"
+  #     - SEARXNG_LANG=auto
+  #     - SEARXNG_AUTOCOMPLETE=google
+  #     - SEARXNG_METRICS=false
+  #     - SEARXNG_IMAGE_PROXY=false
+  #     - SEARXNG_METHOD=POST
+  #     - SEARXNG_SAFE_SEARCH=0
+  #     - SEARXNG_VALKEY_HOST=searxng-valkey   # <-- tell searxng where Valkey lives
+  #   depends_on:
+  #     valkey:
+  #       condition: service_healthy
+  #   volumes:
+  #     - $PWD/config/settings-full.yml:/etc/searxng/settings.yml:ro,Z
+  #     - $PWD/config/limiter.toml:/etc/searxng/limiter.toml:ro,Z
+  #     - $PWD/data/searxng-data:/var/lib/searxng
+  #   networks:
+  #     - searxng-net
+# networks:
+#   searxng-net:
+#     driver: bridge

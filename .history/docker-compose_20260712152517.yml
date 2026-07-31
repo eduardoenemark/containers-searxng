@@ -1,0 +1,57 @@
+version: "3.9"
+services:
+  searxng:
+    image: docker.io/searxng/searxng:2026.7.3-747cec4c2
+    container_name: searxng
+    depends_on: searxng-valkey
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      - SEARXNG_PORT=8080
+      - SEARXNG_BIND=127.0.0.1
+      - SEARXNG_SECRET="searxng"
+      - SEARXNG_LANG=auto
+      - SEARXNG_AUTOCOMPLETE=google
+      - SEARXNG_METRICS=false
+      - SEARXNG_IMAGE_PROXY=false
+      - SEARXNG_METHOD=POST
+      - SEARXNG_SAFE_SEARCH=0
+    command: mkdir -p ./data/searxng-data
+    volumes:
+      - ./config/settings-full.yml:/etc/searxng/settings.yml:ro,Z
+      - ./config/limiter.toml:/etc/searxng/limiter.toml:ro,Z
+      - ./data/searxng-data:/var/lib/searxng
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/').read()"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - searxng-net
+  valkey:
+    image: docker.io/valkey/valkey:9-alpine
+    container_name: searxng-valkey
+    restart: always
+    ports:
+      - 6379:6379
+    command: mkdir -p ./data/valkey-data
+    volumes:
+      - ./data/valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - searxng-net
+volumes:
+  searxng-data:
+    driver: local
+  valkey-data:
+    driver: local
+networks:
+  searxng-net:
+    driver: bridge

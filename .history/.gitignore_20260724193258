@@ -1,0 +1,22 @@
+# SearXNG — Arquivos ignorados no versionamento
+
+# Variáveis de ambiente (pode conter secrets)
+.env
+.env.local
+
+# Backups locais
+backups/
+
+# Dados do Docker (volumes são gerenciados pelo docker-compose)
+docker-data/
+
+# Logs
+*.log
+logs/
+
+# Sistema
+.DS_Store
+Thumbs.db
+data/
+data-searxng
+data-valkey

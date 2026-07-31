@@ -1,0 +1,47 @@
+version: "3.9"
+
+# SearXNG — Dedicated Private Search Service
+# Engines configurados: 55+
+#
+# Commands:
+#   Start and stay same console: podman-compose up
+#   Start with detached process: docker compose up -d
+#   Stop: podman-compose down
+#   Show live logs: podman-compose logs -f
+#   Example request command: curl -kv "http://localhost:8888/search?q=python+test&format=json" -o python-test-result.json
+
+services:
+  valkey:
+    image: docker.io/valkey/valkey:9-alpine3.24
+    container_name: valkey
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data-valkey:/data
+    healthcheck:
+      test: ["CMD","valkey-cli -p 6379 ping | grep PONG"]
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 3s
+    networks:
+      - searxng-net
+  searxng:
+    image: docker.io/searxng/searxng:2026.7.24-4f64d9501
+    container_name: searxng
+    restart: always
+    ports:
+      - 8888:8080
+    depends_on:
+      valkey:
+        condition: service_healthy
+    volumes:
+      - ./config/settings-full.yml:/etc/searxng/settings.yml:ro,Z
+      - ./config/limiter.toml:/etc/searxng/limiter.toml:ro,Z
+      - ./data-searxng:/var/lib/searxng
+    networks:
+      - searxng-net
+networks:
+  searxng-net:
+    driver: bridge

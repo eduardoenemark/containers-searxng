@@ -1,0 +1,31 @@
+# SearXNG — Files excluded from version control
+
+# Environment variables and sensitive secrets - contains credentials, API keys,
+# private configurations that should not be shared with the remote repository
+.env
+.env.local  # Local overrides for development (usually contain secrets)
+
+# Manual backups directed to local filesystem -
+# managed through git using .bkp pattern in config/
+backups/
+
+# Docker persistent data - mounted volumes and stored outside containers 
+# recreated automatically by docker-compose.yml, including user customizations
+docker-data/
+data-searxng  # Custom instance storage (cache, indexes)
+data-valkey   # Redis-compatible database backend data
+
+# Logs and temporary files - execution outputs that grow indefinitely
+*.log         # Individual log files in any directory
+logs/          # Main directory where logs are consolidated per application
+
+# Operating system - automatically generated files by different platforms
+.DS_Store     # Mac OS Finder metadata cache (incompatible with Linux)
+Thumbs.db      # Windows thumbnail database files
+data/
+data-searxng
+data-valkey
+*.test.json
+*.log
+temp/
+tmp/
