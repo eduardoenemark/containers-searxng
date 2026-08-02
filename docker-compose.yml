@@ -52,7 +52,6 @@ services:
       - SEARXNG_FILTER_LINK_LOCAL=false
     networks:
       - searxng-net
-
   nginx:
     image: docker.io/nginx:stable-alpine3.24-perl 
     container_name: nginx
@@ -68,7 +67,6 @@ services:
         condition: service_started
     networks:
       - searxng-net
-
 networks:
   searxng-net:
     driver: bridge
